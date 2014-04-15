@@ -1,0 +1,3 @@
+convergence? double 1e-10,
+max_iterations? int 50,
+conv_type? enum { MAXE, RMSE, MAE }

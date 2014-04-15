@@ -1,0 +1,5 @@
+lambdaccsd
+{
+    include iterative,
+	include cc_diis
+}

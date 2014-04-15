@@ -54,23 +54,14 @@ Fragment::Fragment(const std::string& s)
         throw logic_error("malformed fragment: " + s);
     }
 
-    if (rp-lp == 3)
+    if (comma == string::npos)
     {
-        op = s.substr(0,lp);
-        out = Line::parse(s.substr(lp+1, 1));
-        in = Line::parse(s.substr(lp+2, 1));
+        throw logic_error("malformed fragment: " + s);
     }
-    else
-    {
-        if (comma == string::npos)
-        {
-            throw logic_error("malformed fragment: " + s);
-        }
 
-        op = s.substr(0,lp);
-        out = Line::parse(s.substr(lp+1, comma-lp-1));
-        in = Line::parse(s.substr(comma+1, rp-comma-1));
-    }
+    op = s.substr(0,lp);
+    out = Line::parse(s.substr(lp+1, comma-lp-1));
+    in = Line::parse(s.substr(comma+1, rp-comma-1));
 }
 
 bool Fragment::operator<(const Fragment& other) const

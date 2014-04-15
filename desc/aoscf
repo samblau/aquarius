@@ -1,0 +1,6 @@
+aoscf
+{
+	frozen_core? bool false,
+    include iterative,
+    include scf_diis
+}

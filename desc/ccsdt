@@ -1,0 +1,5 @@
+ccsdt
+{
+    include iterative,
+    include cc_diis
+}

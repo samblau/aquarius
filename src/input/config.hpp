@@ -51,13 +51,13 @@ class Schema;
 class EntryNotFoundError : public std::runtime_error
 {
     public:
-        EntryNotFoundError(const std::string& what_arg) : runtime_error(what_arg) {}
+        EntryNotFoundError(const std::string& what_arg) : runtime_error("Node " + what_arg + " was not found.") {}
 };
 
 class NoValueError : public std::runtime_error
 {
     public:
-        NoValueError(const std::string& what_arg) : runtime_error(what_arg) {}
+        NoValueError(const std::string& what_arg) : runtime_error("Node " + what_arg + " has no value.") {}
 };
 
 class BadValueError : public std::runtime_error
@@ -65,7 +65,7 @@ class BadValueError : public std::runtime_error
     public:
         BadValueError() : runtime_error("bad value") {}
 
-        BadValueError(const std::string& what_arg) : runtime_error(what_arg) {}
+        BadValueError(const std::string& what_arg) : runtime_error("Node " + what_arg + " has a bad value.") {}
 };
 
 class SchemaValidationError : public std::runtime_error
@@ -77,17 +77,16 @@ class SchemaValidationError : public std::runtime_error
 class FormatError : public std::runtime_error
 {
     private:
-        static std::string buildString(const std::string& what_arg, const int lineno)
+        static std::string buildString(const std::string& what_arg, const std::string& name, const int lineno)
         {
-            std::string s;
-            std::ostringstream os(s);
-            os << what_arg << ": line " << lineno;
-            return s;
+            std::ostringstream os;
+            os << name << ": line " << lineno << ": " << what_arg;
+            return os.str();
         }
 
     public:
-        FormatError(const std::string& what_arg, const int lineno)
-        : runtime_error(buildString(what_arg, lineno)) {}
+        FormatError(const std::string& what_arg, const std::string& name, const int lineno)
+        : runtime_error(buildString(what_arg, name, lineno)) {}
 };
 
 class Config
@@ -195,7 +194,7 @@ class Config
         template<typename T>
         std::vector< std::pair<std::string,T> > find(const std::string& pattern) const;
 
-        void read(const std::string& cwd, std::istream& is);
+        void read(const std::string& cwd, const std::string& name, std::istream& is);
 
         void read(const std::string& file);
 

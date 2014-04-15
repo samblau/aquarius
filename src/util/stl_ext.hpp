@@ -56,6 +56,8 @@ public: \
     name& operator=(const name&) = delete; \
 private:
 
+#define STATIC_ASSERT(x) static_assert(x,#x);
+
 #else
 
 #define NON_COPYABLE(name) \
@@ -68,6 +70,34 @@ private: \
 
 namespace std
 {
+    template <bool x> struct static_assert_ {};
+    template <> struct static_assert_<true> { typedef bool failure; };
+
+    #define CAT_(a,b) a##b
+    #define CAT(a,b) CAT_(a,b)
+    #define STATIC_ASSERT(x) typedef typename std::static_assert_<x>::failure CAT(__failure_,__LINE__);
+
+    template <typename Base, typename Derived>
+    class is_base_of
+    {
+        typedef char yes[2];
+        typedef char no[4];
+
+        struct wrapper
+        {
+            operator Derived*();
+            operator Base*() const;
+        };
+
+        template <typename T>
+        static yes& test(Derived* x, T y);
+
+        static no& test(Base* x, int y);
+
+        public:
+            const static bool value = sizeof(test(wrapper(),int())) == sizeof(yes);
+    };
+
     template <bool cond, class return_type = void> struct enable_if {};
     template <class return_type> struct enable_if<true, return_type> { typedef return_type type; };
     template <> struct enable_if<true> { typedef void type; };
@@ -1638,6 +1668,15 @@ template <typename new_type > return_type
 namespace std
 {
 
+/*
+ * Generic base class with virtual destructor so that
+ * shared_ptr etc. can be used safely
+ */
+struct Destructible
+{
+    virtual ~Destructible() {}
+};
+
 template <class T, class U>
 struct if_exists
 {
@@ -2219,7 +2258,7 @@ template<typename T, class Predicate> std::vector<T>& filter(std::vector<T>& v, 
 
 template<typename T, typename U, class Functor> std::vector<U> apply(std::vector<T>& v, Functor f)
 {
-    std::vector<U> v2();
+    std::vector<U> v2;
 
     typename std::vector<T>::const_iterator i;
 
@@ -2528,6 +2567,9 @@ struct complex_type<complex<T> >
     typedef complex<T> type;
 };
 
+template <typename T> struct is_complex                   { static const bool value = false; };
+template <typename T> struct is_complex<std::complex<T> > { static const bool value = true; };
+
 template <class T, class U>
 struct doublet
 {
@@ -2742,42 +2784,117 @@ void cosort(key_iterator keys_begin, key_iterator keys_end,
     sort(begin, end, cocomparator<key_iterator,val_iterator,Comparator>(comp));
 }
 
+template <class T, class S, typename dummy=void> struct result_type {};
+template        <> struct result_type<long double,long double>                         { typedef long double type; };
+template        <> struct result_type<long double,     double>                         { typedef long double type; };
+template        <> struct result_type<long double,      float>                         { typedef long double type; };
+template <class T> struct result_type<long double,          T,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef long double type; };
+template        <> struct result_type<     double,long double>                         { typedef long double type; };
+template        <> struct result_type<      float,long double>                         { typedef long double type; };
+template <class T> struct result_type<          T,long double,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef long double type; };
+template        <> struct result_type<     double,     double>                         { typedef      double type; };
+template        <> struct result_type<     double,      float>                         { typedef      double type; };
+template <class T> struct result_type<     double,          T,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef      double type; };
+template        <> struct result_type<      float,     double>                         { typedef      double type; };
+template <class T> struct result_type<          T,     double,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef      double type; };
+template        <> struct result_type<      float,     float>                          { typedef       float type; };
+template <class T> struct result_type<      float,          T,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef       float type; };
+template <class T> struct result_type<          T,      float,
+                                      typename enable_if<is_integral<T>::value>::type> { typedef       float type; };
+
 }
 
-inline std::complex<float> operator*(std::complex<float> f, double d)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator+(std::complex<C> c, S s)
 {
-    return f*(float)d;
+    return c+(C)s;
 }
 
-inline std::complex<float> operator*(double d, std::complex<float> f)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator-(std::complex<C> c, S s)
 {
-    return f*(float)d;
+    return c-(C)s;
 }
 
-inline std::complex<float> operator/(std::complex<float> f, double d)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator*(std::complex<C> c, S s)
 {
-    return f/(float)d;
+    return c*(C)s;
 }
 
-template <class F, class I>
-typename std::enable_if<std::is_integral<I>::value,std::complex<F> >::type
-operator*(std::complex<F> f, I i)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator/(std::complex<C> c, S s)
 {
-    return f*(F)i;
+    return c/(C)s;
 }
 
-template <class F, class I>
-typename std::enable_if<std::is_integral<I>::value,std::complex<F> >::type
-operator*(I i, std::complex<F> f)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator+(S s, std::complex<C> c)
 {
-    return f*(F)i;
+    return (C)s+c;
 }
 
-template <class F, class I>
-typename std::enable_if<std::is_integral<I>::value,std::complex<F> >::type
-operator/(std::complex<F> f, I i)
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator-(S s, std::complex<C> c)
 {
-    return f/(F)i;
+    return (C)s-c;
+}
+
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator*(S s, std::complex<C> c)
+{
+    return (C)s*c;
+}
+
+template <class C, class S>
+typename std::enable_if<std::is_arithmetic<S>::value,std::complex<C> >::type
+operator/(S s, std::complex<C> c)
+{
+    return (C)s/c;
+}
+
+template <class T, class S>
+std::complex<typename std::result_type<T,S>::type>
+operator+(std::complex<T> t, std::complex<S> s)
+{
+    typedef typename std::result_type<T,S>::type U;
+    return std::complex<U>(t)+std::complex<U>(s);
+}
+
+template <class T, class S>
+std::complex<typename std::result_type<T,S>::type>
+operator-(std::complex<T> t, std::complex<S> s)
+{
+    typedef typename std::result_type<T,S>::type U;
+    return std::complex<U>(t)-std::complex<U>(s);
+}
+
+template <class T, class S>
+std::complex<typename std::result_type<T,S>::type>
+operator*(std::complex<T> t, std::complex<S> s)
+{
+    typedef typename std::result_type<T,S>::type U;
+    return std::complex<U>(t)*std::complex<U>(s);
+}
+
+template <class T, class S>
+std::complex<typename std::result_type<T,S>::type>
+operator/(std::complex<T> t, std::complex<S> s)
+{
+    typedef typename std::result_type<T,S>::type U;
+    return std::complex<U>(t)/std::complex<U>(s);
 }
 
 #endif

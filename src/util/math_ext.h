@@ -40,6 +40,8 @@ extern "C"
 {
 #endif
 
+#define IS_POWER_OF_TWO(x) (((x)>0)&&(((x)&((x)-1))==0))
+
 int roundup(int x, int y);
 
 double dist2(const double* a, const double* b);

@@ -58,10 +58,25 @@ Diagram::Diagram(const Type type, const vector<string>& strings)
         vector<Fragment> fragments;
         Fraction factor;
         istringstream iss(*str);
-        string token;
+        string token, bit;
 
-        while (iss >> token)
+        while (true)
         {
+            token.clear();
+            while (iss >> bit)
+            {
+                if (token.empty())
+                {
+                    token = bit;
+                }
+                else
+                {
+                    token = token+" "+bit;
+                }
+                if (bit[bit.size()-1] == ')') break;
+            }
+            if (token.empty()) break;
+
             if (token[0] == 'p' || token[0] == 'P')
             {
                 assyms.push_back(token);

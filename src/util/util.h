@@ -30,6 +30,8 @@
 #define EXP_FLOPS 30
 #define LOG_FLOPS 30
 
+#define IS_POWER_OF_TWO(x) (((x)>0)&&(((x)&((x)-1))==0))
+
 /*
 #define INSTANTIATE_SPECIALIZATIONS(name) \
 template class name<double>; \

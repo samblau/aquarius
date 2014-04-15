@@ -39,40 +39,22 @@ class Tokenizer
         int lineno;
         istream& is;
         string line;
+        string name;
         istringstream iss;
 
         bool nextLine()
         {
-            while (true)
-            {
-                if (!is) return false;
-                lineno++;
-                getline(is, line);
-                iss.clear();
-                iss.str(line);
-                char c;
-                while (!(!iss.get(c)))
-                {
-                    if (c != ' ' && c != '\t' && c != '\r')
-                    {
-                        if (c == '#')
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            iss.unget();
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
+            if (!is.good()) return false;
+            lineno++;
+            getline(is, line);
+            iss.clear();
+            iss.str(line);
+            return true;
         }
 
     public:
-        Tokenizer(istream& is)
-        : lineno(0), is(is) {}
+        Tokenizer(const string& name, istream& is)
+        : lineno(0), is(is), name(name) {}
 
         int getLine() const { return lineno; }
 
@@ -82,7 +64,7 @@ class Tokenizer
             string token;
 
             iss >> token;
-            while (token.size() == 0)
+            while (token.size() == 0 || token[0] == '#')
             {
                 if (!nextLine()) return false;
                 iss >> token;
@@ -97,7 +79,7 @@ class Tokenizer
                     if (c == '"') break;
                     oss << c;
                 }
-                if (!iss) throw FormatError("End of line reached while looking for closing \" character", lineno);
+                if (!iss) throw FormatError("End of line reached while looking for closing \" character", name, lineno);
             }
             else
             {
@@ -131,7 +113,7 @@ Config::Config(istream& is)
 {
     root = new node_t;
     root->children = NULL;
-    read(".", is);
+    read(".", "stdin", is);
 }
 
 Config::Config(const string& file)
@@ -436,10 +418,10 @@ void Config::read(const string& file)
     }
 
     ifstream ifs(file.c_str());
-    read(cwd, ifs);
+    read(cwd, file, ifs);
 }
 
-void Config::read(const string& cwd, istream& is)
+void Config::read(const string& cwd, const string& name, istream& is)
 {
     detachNode(root);
     root = new node_t;
@@ -452,7 +434,7 @@ void Config::read(const string& cwd, istream& is)
 
     vector<node_t*> current(2, root);
 
-    Tokenizer t(is);
+    Tokenizer t(name, is);
     string token;
 
     while (t.next(token))
@@ -466,7 +448,7 @@ void Config::read(const string& cwd, istream& is)
             }
             else if (token[i] == '}')
             {
-                if (current.size() < 2) throw FormatError("Too many }'s", t.getLine());
+                if (current.size() <= 2) throw FormatError("Too many }'s", name, t.getLine());
                 current.pop_back();
                 i++;
             }
@@ -487,7 +469,7 @@ void Config::read(const string& cwd, istream& is)
                 {
                     if (i+len != token.size())
                     {
-                        throw FormatError("\"include\" must be immediately followed by a filename", t.getLine());
+                        throw FormatError("\"include\" must be immediately followed by a filename", name, t.getLine());
                     }
 
                     t.next(token);
@@ -496,7 +478,7 @@ void Config::read(const string& cwd, istream& is)
 
                     if (pos == 0)
                     {
-                        throw FormatError("\"include\" must be immediately followed by a filename", t.getLine());
+                        throw FormatError("\"include\" must be immediately followed by a filename", name, t.getLine());
                     }
 
                     string fname = token.substr(0, len);
@@ -505,7 +487,9 @@ void Config::read(const string& cwd, istream& is)
                     Config leaf(fname);
                     for (node_t *n = leaf.root->children;n != NULL;n = n->next)
                     {
-                        addNode(current.back(), cloneNode(n));
+                        node_t* newnode = cloneNode(n);
+                        attachNode(newnode);
+                        addNode(current.back(), newnode);
                     }
                 }
                 else
@@ -518,7 +502,7 @@ void Config::read(const string& cwd, istream& is)
         }
     }
 
-    if (current.size() != 2) throw FormatError("Too few }'s", t.getLine());
+    if (current.size() != 2) throw FormatError("Too few }'s", name, t.getLine());
 }
 
 void Config::write(const string& file) const

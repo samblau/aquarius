@@ -360,7 +360,7 @@ void Molecule::initSymmetry(const Config& config, vector<AtomCartSpec>& cartpos)
     {
         for (int j = 0;j < 3;j++)
         {
-            if (i != j) assert(I[i][j] < 1e-12);
+            if (i != j) assert(std::abs(I[i][j]) < 1e-8);
         }
     }
 

@@ -1,0 +1,5 @@
+2eints
+{
+	storage_cutoff? double 1e-14,
+	calc_cutoff? double 1e-15
+}

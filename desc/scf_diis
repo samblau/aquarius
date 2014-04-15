@@ -1,0 +1,7 @@
+diis?
+{
+	damping? double 0.0,
+	start? int 8,
+	order? int 6,
+	jacobi? bool false
+}
