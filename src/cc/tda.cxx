@@ -56,7 +56,7 @@ void TDA<U>::run(TaskDAG& dag, const Arena& arena)
     const Space& occ = W.occ;
     const Space& vrt = W.vrt;
 
-    // // Code for checking sparcity:
+    // // Code for checking sparcity:  
     // const SpinorbitalTensor<U>& WABCD = W.getABCD();
     // const SymmetryBlockedTensor<U>& ABAB = WABCD({1,0},{1,0});
 
