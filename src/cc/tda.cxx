@@ -56,6 +56,49 @@ void TDA<U>::run(TaskDAG& dag, const Arena& arena)
     const Space& occ = W.occ;
     const Space& vrt = W.vrt;
 
+    // // Code for checking sparcity:
+    // const SpinorbitalTensor<U>& WABCD = W.getABCD();
+    // const SymmetryBlockedTensor<U>& ABAB = WABCD({1,0},{1,0});
+
+    // for (int R = 0;R < nirrep;R++)
+    // {
+    //     int num_total = 0;
+    //     int num_zero = 0;
+    //     const Representation& irr_R = group.getIrrep(R);
+    //     for (int a = 0;a < nirrep;a++)
+    //     {
+    //         const Representation& irr_a = group.getIrrep(a);
+    //         for (int b = 0;b < nirrep;b++)
+    //         {
+    //             const Representation& irr_b = group.getIrrep(b);
+    //             if (!(irr_a*irr_b*irr_R).isTotallySymmetric()) continue;
+
+    //             for (int c = 0;c < nirrep;c++)
+    //             {
+    //                 const Representation& irr_c = group.getIrrep(c);
+    //                 for (int d = 0;d < nirrep;d++)
+    //                 {
+    //                     const Representation& irr_d = group.getIrrep(d);
+    //                     if (!(irr_c*irr_d*irr_R).isTotallySymmetric()) continue;
+
+    //                     CTFTensor<U> this_tensor = ABAB({a,b,c,d});
+    //                     vector<U> temp;
+    //                     this_tensor.getAllData(temp);
+    //                     for (int i = 0; i < temp.size(); i++)
+    //                     {
+    //                         num_total++;
+    //                         if (abs(temp[i]) < 1e-10)
+    //                             num_zero++;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     cout << "num_total = " << num_total << endl;
+    //     cout << "num_zero = " << num_zero << endl;
+    //     cout << "num_zero / num_total = " << float(num_zero) / float(num_total) << endl;
+    // }
+
     SpinorbitalTensor<U> Hguess("Hguess", arena, group, {vrt,occ}, {1,1}, {1,1});
     Hguess = 0;
 
