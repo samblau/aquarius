@@ -133,10 +133,10 @@ std::ostream& Logger::error(const Arena& arena)
 {
     if (arena.rank == 0)
     {
-        // sddstream << dateTime() << ": error: ";
-        // return sddstream;
-        std::cout << dateTime() << ": error: ";
-        return std::cout;
+        sddstream << dateTime() << ": error: ";
+        return sddstream;
+        //std::cout << dateTime() << ": error: ";
+        //return std::cout;
     }
     else
     {
