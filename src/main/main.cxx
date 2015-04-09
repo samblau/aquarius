@@ -1,7 +1,12 @@
+#include "util/global.hpp"
+
 #include "tensor/symblocked_tensor.hpp"
 #include "time/time.hpp"
 #include "task/task.hpp"
-#include "util/distributed.hpp"
+
+#ifdef HAVE_LIBINT2
+#include "libint2.h"
+#endif
 
 using namespace aquarius;
 using namespace aquarius::time;
@@ -13,6 +18,11 @@ int main(int argc, char **argv)
     El::Initialize(argc, argv);
     #else
     MPI_Init(&argc, &argv);
+    #endif
+
+    #ifdef HAVE_LIBINT2
+    libint2_static_init();
+    printf("sdflkjsdf\n");
     #endif
 
     if (getenv("OMP_NUM_THREADS") == NULL)
@@ -71,6 +81,10 @@ int main(int argc, char **argv)
 
         Timer::printTimers(world);
     }
+
+    #ifdef HAVE_LIBINT2
+    libint2_static_cleanup();
+    #endif
 
     #ifdef HAVE_ELEMENTAL
     El::Finalize();
