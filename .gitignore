@@ -14,9 +14,13 @@ ctf
 how-did-i-configure
 .*project
 autom4te.cache
+src/external
+*.swp
 config.h
 config.log
 config.status
 .dirstamp
 stamp-h1
 .settings
+.ptp-sync
+.ptp-sync-folder
